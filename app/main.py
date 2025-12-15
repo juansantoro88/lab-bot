@@ -5,35 +5,23 @@ import json
 
 app = FastAPI()
 
+
 # Healthcheck (Render manda HEAD)
 @app.get("/")
-@app.head("/")
-async def root():
-    return {"status": "ok", "message": "Lab bot funcionando v2"}
+def root():
+    return {"status": "ok", "message": "Lab bot funcionando"}
 
-# Meta Webhook Verify (GET)
+# Endpoint de verificación (para WhatsApp, más adelante)
 @app.get("/webhook")
-async def webhook_verify(request: Request):
-    mode = request.query_params.get("hub.mode")
-    token = request.query_params.get("hub.verify_token")
-    challenge = request.query_params.get("hub.challenge")
+async def verify(mode: str = "", challenge: str = "", token: str = ""):
+    if mode == "subscribe" and token == settings.VERIFY_TOKEN:
+        return int(challenge)
+    return {"error": "verification failed"}
 
-    print("VERIFY HIT:", mode, token, challenge, "EXPECTED:", settings.verify_token)
-
-    if mode == "subscribe" and token == settings.verify_token and challenge is not None:
-        # DEBE ser texto plano
-        return Response(content=str(challenge), media_type="text/plain", status_code=200)
-
-    return Response(content="Forbidden", media_type="text/plain", status_code=403)
-
-# Meta Webhook Events (POST)
+# Endpoint que recibe mensajes (POST)
 @app.post("/webhook")
-async def webhook_events(request: Request):
+async def webhook(request: Request):
     payload = await request.json()
     print("EVENT HIT:", json.dumps(payload)[:2000])
     await handle_whatsapp_message(payload)
-<<<<<<< HEAD
-    return Response(content="EVENT_RECEIVED", media_type="text/plain", status_code=200)
-=======
-    return Response(content="EVENT_RECEIVED", media_type="text/plain", status_code=200)
->>>>>>> 3933034 (Webhook v2 y healthcheck)
+    return "EVENT_RECEIVED"
