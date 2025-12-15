@@ -1,23 +1,24 @@
+from anthropic import Anthropic
 from app.config import settings
 
-async def ask_llm(user_text: str) -> str:
-    # Si no hay Claude API key, fallback simple
+# Cambia el modelo aquí si te vuelve a dar 404
+CLAUDE_MODEL = "claude-3-5-haiku-20241022"
+
+client = Anthropic(api_key=settings.claude_api_key)
+
+async def ask_llm(message: str) -> str:
     if not settings.claude_api_key:
-        return f"Recibido: {user_text}"
+        return "No tengo configurada la clave de Claude todavía."
 
     try:
-        from anthropic import AsyncAnthropic
-        client = AsyncAnthropic(api_key=settings.claude_api_key)
-
-        msg = await client.messages.create(
-            model="claude-3-5-sonnet-latest",
-            max_tokens=250,
-            temperature=0.3,
-            system="Eres un asistente útil y breve. Responde en español.",
-            messages=[{"role": "user", "content": user_text}],
+        resp = client.messages.create(
+            model=CLAUDE_MODEL,
+            max_tokens=300,
+            temperature=0.2,
+            system="Responde breve y claro en español.",
+            messages=[{"role": "user", "content": message}],
         )
-        # msg.content suele ser lista de bloques
-        return "".join([c.text for c in msg.content if hasattr(c, "text")]).strip() or "OK"
+        # SDK devuelve lista de bloques; normalmente el primero es texto
+        return resp.content[0].text if resp.content else "OK"
     except Exception as e:
-        print("LLM ERROR:", str(e))
-        return f"Recibido: {user_text}"
+        return f"Error con LLM: {e}"
