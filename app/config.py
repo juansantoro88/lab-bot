@@ -1,22 +1,22 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
-    # WhatsApp
-    whatsapp_token: str
-    whatsapp_phone_id: str
+    # WhatsApp Cloud API
+    whatsapp_token: str | None = None
+    whatsapp_phone_id: str | None = None
+
+    # Webhook verify token (Meta)
     verify_token: str
 
-    # Claude / OpenAI (dejamos OpenAI opcional por si no lo usas)
+    # LLM (opcional)
     claude_api_key: str | None = None
-    openai_api_key: str | None = None
-
-    # DB
-    database_url: str = "sqlite:///./test.db"
 
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="ignore",  # <- clave para que no reviente si hay variables extra
+        extra="ignore",
     )
+
 
 settings = Settings()
